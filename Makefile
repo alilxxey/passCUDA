@@ -41,6 +41,11 @@ $(TARGET): $(ALL_SRC) Makefile
 run: $(TARGET)
 	@./$(TARGET)
 
+.PHONY: rpi
+rpi: $(TARGET)
+	@scp build/paSKUDa pi@172.16.255.2:
+	@ssh pi@172.16.255.2 './paSKUDa'
+
 .PHONY: format
 format:
 	@for CUR in $(GO_SRC); do \
