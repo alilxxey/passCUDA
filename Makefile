@@ -17,7 +17,7 @@ BUILD_DATE	  := $(shell date '+%d-%m-%Y' || echo 'unknown')
 BUILD_TIME	  := $(shell date '+%H:%M:%S' || echo 'unknown')
 VERSION		 := $(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null || echo 'unknown')
 
-GO_FLAGS := CGO_ENABLED=0
+GO_FLAGS := CGO_ENABLED=0 GOOS=linux GOARCH=arm64
 
 LDFLAGS = \
 	-X $(APP_NAME)/internal/models.gitCommit=$(GIT_COMMIT) \
