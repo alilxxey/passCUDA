@@ -6,9 +6,10 @@ import "fmt"
 
 type Config struct {
 	Telegram struct {
-		Token      string  `yaml:"token"`
-		AllowedIDs []int64 `yaml:"allowed_ids"`
+		Token   string `yaml:"token"`
+		Enabled bool   `yaml:"enabled"`
 	} `yaml:"telegram"`
+	Users []User `yaml:"users"`
 }
 
 func Load(path string) (*Config, error) {

@@ -25,7 +25,7 @@ func InitInput(chip string, device int) (*GPIO, error) {
 	}
 	return &GPIO{line: line, chip: chip, device: device}, nil
 }
-func InitTest(chip string, device int) (*GPIO, error) {
+func InitInputDebounce(chip string, device int) (*GPIO, error) {
 	period := 10 * time.Millisecond
 	line, err := gpiocdev.RequestLine(chip, device, gpiocdev.AsInput, gpiocdev.WithDebounce(period))
 	if err != nil {
