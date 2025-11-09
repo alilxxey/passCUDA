@@ -1,47 +1,71 @@
 package gpio
 
-import "github.com/warthog618/go-gpiocdev"
-import "fmt"
+import "context"
 import "time"
+import "paSKUDa/internal/config"
 
-type GPIO struct {
-	chip   string
-	device int
-	line   *gpiocdev.Line
+type Gpio struct {
+	config       *config.Config
+	ctx          context.Context
+	doorRelayPin *Pin
+	openBtnPin   *Pin
 }
 
-func InitOutput(chip string, device int, value int) (*GPIO, error) {
-	line, err := gpiocdev.RequestLine(chip, device, gpiocdev.AsOutput(value))
+func Init(config *config.Config, ctx context.Context) (*Gpio, error) {
+	doorRelay := config.Hardware.DoorRelay
+	doorRelayPin, err := InitOutput(doorRelay.Chip, doorRelay.Channel, !doorRelay.ActiveLevel)
 	if err != nil {
-		return nil, fmt.Errorf("failed to request GPIO line: %w", err)
+		return nil, err
 	}
-	return &GPIO{line: line, chip: chip, device: device}, nil
-}
 
-func InitInput(chip string, device int) (*GPIO, error) {
-	line, err := gpiocdev.RequestLine(chip, device, gpiocdev.AsInput)
+	openBtn := config.Hardware.OpenBtn
+	deboucePeriod := 10 * time.Millisecond
+	openBtnPin, err := InitInputDebounce(openBtn.Chip, openBtn.Channel, deboucePeriod)
 	if err != nil {
-		return nil, fmt.Errorf("failed to request GPIO line: %w", err)
+		return nil, err
 	}
-	return &GPIO{line: line, chip: chip, device: device}, nil
+
+	return &Gpio{
+		config:       config,
+		ctx:          ctx,
+		doorRelayPin: doorRelayPin,
+		openBtnPin:   openBtnPin,
+	}, nil
 }
-func InitInputDebounce(chip string, device int) (*GPIO, error) {
-	period := 10 * time.Millisecond
-	line, err := gpiocdev.RequestLine(chip, device, gpiocdev.AsInput, gpiocdev.WithDebounce(period))
+
+func (g *Gpio) inputPolling() error {
+	openBtnPinValue, err := g.openBtnPin.GetValue()
 	if err != nil {
-		return nil, fmt.Errorf("failed to request GPIO line: %w", err)
+		return err
 	}
-	return &GPIO{line: line, chip: chip, device: device}, nil
+	if openBtnPinValue == g.config.Hardware.OpenBtn.ActiveLevel {
+	}
+	//for {
+	//	val, _ := openBtn.GetValue()
+	//	if val == 0 {
+	//		relay.SetValue(0)
+	//		time.Sleep(1 * time.Second)
+	//		relay.SetValue(1)
+	//		time.Sleep(1 * time.Second)
+	//	}
+	//}
+	return nil
 }
 
-func (gpio *GPIO) SetValue(value int) {
-	gpio.line.SetValue(value)
+func (g *Gpio) StartPolling() error {
+	for {
+		select {
+		case <-g.ctx.Done():
+			return nil
+		default:
+		}
+		err := g.inputPolling()
+		if err != nil {
+			return err
+		}
+	}
 }
 
-func (gpio *GPIO) GetValue() (int, error) {
-	return gpio.line.Value()
-}
-
-func (gpio *GPIO) Deinit() error {
-	return gpio.line.Close()
+func (g *Gpio) Deinit() {
+	g.doorRelayPin.Deinit()
 }

@@ -1,20 +1,22 @@
 package app
 
 import (
-	"paSKUDa/internal/config"
-	"paSKUDa/internal/telegram"
-	"go.uber.org/zap"
 	"context"
+	"go.uber.org/zap"
+	"paSKUDa/internal/config"
+	"paSKUDa/internal/door"
+	"paSKUDa/internal/telegram"
 )
 
 type App struct {
-	ctx context.Context
+	ctx    context.Context
 	config *config.Config
 	tg     *telegram.Telegram
+	door   *door.Door
 }
 
-func Init(ctx context.Context, tg *telegram.Telegram, config *config.Config) (*App, error) {
-	return &App{ctx: ctx, tg: tg, config: config}, nil
+func Init(config *config.Config, ctx context.Context, tg *telegram.Telegram, door *door.Door) (*App, error) {
+	return &App{ctx: ctx, tg: tg, config: config, door: door}, nil
 }
 
 func (app *App) Run() {

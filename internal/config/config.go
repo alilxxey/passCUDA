@@ -9,7 +9,8 @@ type Config struct {
 		Token   string `yaml:"token"`
 		Enabled bool   `yaml:"enabled"`
 	} `yaml:"telegram"`
-	Users []User `yaml:"users"`
+	Users    []User `yaml:"users"`
+	Hardware Gpio   `yaml:"hardware"`
 }
 
 func Load(path string) (*Config, error) {

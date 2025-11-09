@@ -19,8 +19,8 @@ func (c *Config) FindUserById(id int64) (*User, error) {
 }
 
 func (u *User) IsChatAllowedForUser(chatID int64) bool {
-    if len(u.TgAllowedChatIDs) == 0 {
-        return true
-    }
-    return slices.Contains(u.TgAllowedChatIDs, chatID)
+	if len(u.TgAllowedChatIDs) == 0 {
+		return true
+	}
+	return slices.Contains(u.TgAllowedChatIDs, chatID)
 }
