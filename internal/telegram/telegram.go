@@ -2,13 +2,13 @@ package telegram
 
 import (
 	"context"
-	"time"
 	"fmt"
 	"github.com/go-telegram/bot"
 	"go.uber.org/zap"
 	"paSKUDa/internal/config"
 	"paSKUDa/internal/door"
 	"paSKUDa/internal/models"
+	"time"
 	//"github.com/go-telegram/ui/keyboard/reply"
 )
 
@@ -19,6 +19,7 @@ type Telegram struct {
 	openChan         chan models.DoorSignal
 	adminMessageChan chan string
 	door             *door.Door
+	tempBanList      []int64
 }
 
 func Init(
@@ -45,6 +46,7 @@ func Init(
 		openChan:         openChan,
 		adminMessageChan: adminMessageChan,
 		door:             door,
+		tempBanList:      []int64{},
 	}
 
 	tg.registerHandlers()
