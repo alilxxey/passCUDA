@@ -57,7 +57,7 @@ func main() {
 	//	zap.S().Fatalf("failed to init open btn: %v", err)
 	//}
 
-	c, err := config.Load("/tmp/config.yml")
+	c, err := config.Load("/etc/passCUDA/config.yml")
 	if err != nil {
 		zap.S().Fatalf("failed to load config: %v", err)
 	}
