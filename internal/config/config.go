@@ -6,11 +6,15 @@ import "fmt"
 
 type Config struct {
 	Telegram struct {
-		Token   string `yaml:"token"`
-		Enabled bool   `yaml:"enabled"`
+		Token        string `yaml:"token"`
+		Enabled      bool   `yaml:"enabled"`
+		NotifyChatId string `yaml:"notify_chat_id"`
 	} `yaml:"telegram"`
 	Users    []User `yaml:"users"`
 	Hardware Gpio   `yaml:"hardware"`
+	Door     struct {
+		RelayOffHoldTimeS int `yaml:"relay_off_hold_time_s"`
+	} `yaml:"door"`
 }
 
 func Load(path string) (*Config, error) {

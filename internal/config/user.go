@@ -10,6 +10,10 @@ type User struct {
 	TgAllowedChatIDs []int64 `yaml:"tg_allowed_chat_ids"`
 }
 
+func (u *User) String() string {
+	return fmt.Sprintf("User(name=%s, role=%s, tg_user_id=%d)", u.Name, u.Role, u.TgUserID)
+}
+
 func (c *Config) FindUserById(id int64) (*User, error) {
 	idx := slices.IndexFunc(c.Users, func(c User) bool { return c.TgUserID == id })
 	if idx < 0 {

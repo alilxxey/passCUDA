@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-telegram/bot"
 	tgmodels "github.com/go-telegram/bot/models"
 	"go.uber.org/zap"
@@ -16,15 +17,26 @@ func (tg *Telegram) authMiddleware(minRole config.UserRole, next bot.HandlerFunc
 		}
 		user, err := tg.conf.FindUserById(userID)
 		if err != nil {
-			zap.S().Warnf("unauthorized access from user: `%d`, chat: `%d`", userID, chatID)
+			msg := fmt.Sprintf("unauthorized access from user: `%d`, chat: `%d`", userID, chatID)
+			tg.NotifyAdmins(msg)
+			zap.S().Warn(msg)
 			return
 		}
 		if !user.IsChatAllowedForUser(chatID) {
-			zap.S().Warnf("user: `%d` not allowed to access from chat: `%d`", userID, chatID)
+			msg := fmt.Sprintf("user: `%d` not allowed to access from chat: `%d`", userID, chatID)
+			tg.NotifyAdmins(msg)
+			zap.S().Warn(msg)
 			return
 		}
 		if user.Role < minRole {
-			zap.S().Warnf("user: `%d` role: `%s` is too low for acess this resource, expected: `%s`", userID, user.Role, minRole)
+			msg := fmt.Sprintf(
+				"user: `%d` role: `%s` is too low for acess this resource, expected: `%s`",
+				userID,
+				user.Role,
+				minRole,
+			)
+			tg.NotifyAdmins(msg)
+			zap.S().Warn(msg)
 			return
 		}
 		next(ctx, b, update)

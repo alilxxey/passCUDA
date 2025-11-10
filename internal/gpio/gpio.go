@@ -7,20 +7,20 @@ import "paSKUDa/internal/config"
 type Gpio struct {
 	config       *config.Config
 	ctx          context.Context
-	doorRelayPin *Pin
-	openBtnPin   *Pin
+	DoorRelayPin *Pin
+	OpenBtnPin   *Pin
 }
 
 func Init(config *config.Config, ctx context.Context) (*Gpio, error) {
 	doorRelay := config.Hardware.DoorRelay
-	doorRelayPin, err := InitOutput(doorRelay.Chip, doorRelay.Channel, !doorRelay.ActiveLevel)
+	DoorRelayPin, err := InitOutput(doorRelay.Chip, doorRelay.Channel, !doorRelay.ActiveLevel)
 	if err != nil {
 		return nil, err
 	}
 
 	openBtn := config.Hardware.OpenBtn
 	deboucePeriod := 10 * time.Millisecond
-	openBtnPin, err := InitInputDebounce(openBtn.Chip, openBtn.Channel, deboucePeriod)
+	OpenBtnPin, err := InitInputDebounce(openBtn.Chip, openBtn.Channel, deboucePeriod)
 	if err != nil {
 		return nil, err
 	}
@@ -28,17 +28,17 @@ func Init(config *config.Config, ctx context.Context) (*Gpio, error) {
 	return &Gpio{
 		config:       config,
 		ctx:          ctx,
-		doorRelayPin: doorRelayPin,
-		openBtnPin:   openBtnPin,
+		DoorRelayPin: DoorRelayPin,
+		OpenBtnPin:   OpenBtnPin,
 	}, nil
 }
 
 func (g *Gpio) inputPolling() error {
-	openBtnPinValue, err := g.openBtnPin.GetValue()
+	OpenBtnPinValue, err := g.OpenBtnPin.GetValue()
 	if err != nil {
 		return err
 	}
-	if openBtnPinValue == g.config.Hardware.OpenBtn.ActiveLevel {
+	if OpenBtnPinValue == g.config.Hardware.OpenBtn.ActiveLevel {
 	}
 	//for {
 	//	val, _ := openBtn.GetValue()
@@ -67,5 +67,5 @@ func (g *Gpio) StartPolling() error {
 }
 
 func (g *Gpio) Deinit() {
-	g.doorRelayPin.Deinit()
+	g.DoorRelayPin.Deinit()
 }

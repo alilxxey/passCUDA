@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-telegram/bot"
 	tgmodels "github.com/go-telegram/bot/models"
 	"github.com/go-telegram/ui/keyboard/reply"
@@ -23,7 +24,34 @@ func (tg *Telegram) registerHandlers() {
 		bot.MatchTypeExact,
 		tg.authMiddleware(config.UserRoleUser, tg.getStartHandler()),
 	)
+	tg.bot.RegisterHandler(
+		bot.HandlerTypeMessageText,
+		"/id",
+		bot.MatchTypeExact,
+		tg.idHandler,
+	)
+	tg.bot.RegisterHandler(
+		bot.HandlerTypeMessageText,
+		"Open",
+		bot.MatchTypeExact,
+		tg.authMiddleware(
+			config.UserRoleUser,
+			tg.getOpenHandler(),
+		),
+	)
 
+}
+
+func (tg *Telegram) idHandler(ctx context.Context, b *bot.Bot, update *tgmodels.Update) {
+	userID, chatID, ok := extractUserAndChat(update)
+	if !ok {
+		return
+	}
+	msg := fmt.Sprintf("chatID: %d, userID: %d", chatID, userID)
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: update.Message.Chat.ID,
+		Text:   msg,
+	})
 }
 
 func (tg *Telegram) getMainReplyKbd() *reply.ReplyKeyboard {
@@ -31,7 +59,14 @@ func (tg *Telegram) getMainReplyKbd() *reply.ReplyKeyboard {
 		reply.WithPrefix("main_keyboard"),
 		reply.IsPersistent(),
 	).
-		Button("Open", tg.bot, bot.MatchTypeExact, tg.getOpenHandler())
+		Button("Open",
+			tg.bot,
+			bot.MatchTypeExact,
+			tg.authMiddleware(
+				config.UserRoleUser,
+				tg.getOpenHandler(),
+			),
+		)
 	return kbd
 }
 
@@ -62,11 +97,28 @@ func (tg *Telegram) getVersionHandler() bot.HandlerFunc {
 
 func (tg *Telegram) getOpenHandler() bot.HandlerFunc {
 	return func(ctx context.Context, b *bot.Bot, update *tgmodels.Update) {
-		// tg.dm.Open()
-		msg := "done"
+		userID, _, _ := extractUserAndChat(update)
+		user, _ := tg.conf.FindUserById(userID)
+		if tg.door.OpenInProgress {
+			zap.S().Warnf("user: `%s` trying to open door while previous open in progress", user)
+			return
+		}
+
+		tg.openChan <- models.DoorSignalOpen
+
 		b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: update.Message.Chat.ID,
-			Text:   msg,
+			Text:   "done!",
 		})
+
+		tg.NotifyAdmins(fmt.Sprintf("door opened by user: `%w`", user))
 	}
+}
+
+func (tg *Telegram) NotifyAdmins(str string) error {
+	_, err := tg.bot.SendMessage(tg.ctx, &bot.SendMessageParams{
+		ChatID: tg.conf.Telegram.NotifyChatId,
+		Text:   str,
+	})
+	return err
 }

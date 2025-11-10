@@ -7,9 +7,11 @@ import (
 	"os/signal"
 
 	"paSKUDa/internal/app"
+	"paSKUDa/internal/card"
 	"paSKUDa/internal/config"
 	"paSKUDa/internal/door"
 	"paSKUDa/internal/gpio"
+	"paSKUDa/internal/models"
 	"paSKUDa/internal/telegram"
 
 	"os/exec"
@@ -60,30 +62,38 @@ func main() {
 		zap.S().Fatalf("failed to load config: %w", err)
 	}
 
-	tg, err := telegram.Init(c, ctx, c.Telegram.Token)
-	if err != nil {
-		zap.S().Fatalf("failed to init tg: %w", err)
-	}
+	openChan := make(chan models.DoorSignal, 10)
 
 	gpio, err := gpio.Init(c, ctx)
 	if err != nil {
 		zap.S().Fatalf("failed to init gpio: %w", err)
 	}
+	defer gpio.Deinit()
 
-	door, err := door.Init(c, ctx)
+	door, err := door.Init(c, ctx, gpio, openChan)
 	if err != nil {
 		zap.S().Fatalf("failed to init door: %w", err)
 	}
 
-	app, err := app.Init(c, ctx, tg, door)
+	tg, err := telegram.Init(c, ctx, c.Telegram.Token, openChan, door)
+	if err != nil {
+		zap.S().Fatalf("failed to init tg: %w", err)
+	}
+
+	card, err := card.Init(c, ctx, openChan)
+	if err != nil {
+		zap.S().Fatalf("failed to init card: %w", err)
+	}
+
+	app, err := app.Init(c, ctx, tg, door, card)
 	if err != nil {
 		zap.S().Fatalf("failed to init app: %w", err)
 	}
-	app.Run()
+	if err := app.Run(); err != nil {
+		zap.S().Fatalf("failed to start app: %w", err)
+	}
 
 	<-ctx.Done()
-
-	gpio.Deinit()
 
 	//for {
 	//	val, _ := openBtn.GetValue()

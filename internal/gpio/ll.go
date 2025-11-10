@@ -51,9 +51,10 @@ func InitInputDebounce(chip string, device int, deboucePeriod time.Duration) (*P
 	}, nil
 }
 
-//	func (gpio *Pin) SetValue(value bool) {
-//		gpio.line.SetValue(value)
-//	}
+func (gpio *Pin) SetValue(value bool) {
+	// gpio.line.SetValue(value)
+}
+
 func (gpio *Pin) GetValue() (bool, error) {
 	if gpio.direction != DirectionInput {
 		return false, fmt.Errorf("failed to get value, pin: `%w` is not an input pin", gpio)
