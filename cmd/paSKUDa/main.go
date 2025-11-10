@@ -95,21 +95,4 @@ func main() {
 	}
 
 	<-ctx.Done()
-
-	//for {
-	//	val, _ := openBtn.GetValue()
-	//	if val == 0 {
-	//		relay.SetValue(0)
-	//		time.Sleep(1 * time.Second)
-	//		relay.SetValue(1)
-	//		time.Sleep(1 * time.Second)
-	//	}
-	//}
-
-	//if err := relay.Deinit(); err != nil {
-	//	zap.S().Fatalf("failed to deinit relay: %v", err)
-	//}
-	//if err := openBtn.Deinit(); err != nil {
-	//	zap.S().Fatalf("failed to deinit relay: %v", err)
-	//}
 }

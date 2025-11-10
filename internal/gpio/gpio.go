@@ -68,4 +68,5 @@ func (g *Gpio) StartPolling() error {
 
 func (g *Gpio) Deinit() {
 	g.DoorRelayPin.Deinit()
+	g.OpenBtnPin.Deinit()
 }

@@ -43,11 +43,11 @@ func (tg *Telegram) registerHandlers() {
 }
 
 func (tg *Telegram) idHandler(ctx context.Context, b *bot.Bot, update *tgmodels.Update) {
-	userID, chatID, ok := extractUserAndChat(update)
+	userID, chatID, userName, ok := extractUserAndChat(update)
 	if !ok {
 		return
 	}
-	msg := fmt.Sprintf("chatID: %d, userID: %d", chatID, userID)
+	msg := fmt.Sprintf("chatID: `%d`, userID: `%d`, userName: `%s`", chatID, userID, userName)
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: update.Message.Chat.ID,
 		Text:   msg,
@@ -97,7 +97,7 @@ func (tg *Telegram) getVersionHandler() bot.HandlerFunc {
 
 func (tg *Telegram) getOpenHandler() bot.HandlerFunc {
 	return func(ctx context.Context, b *bot.Bot, update *tgmodels.Update) {
-		userID, _, _ := extractUserAndChat(update)
+		userID, _, _, _ := extractUserAndChat(update)
 		user, _ := tg.conf.FindUserById(userID)
 		if tg.door.OpenInProgress {
 			zap.S().Warnf("user: `%s` trying to open door while previous open in progress", user)

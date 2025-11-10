@@ -9,7 +9,6 @@ import (
 	"paSKUDa/internal/door"
 	"paSKUDa/internal/models"
 	"time"
-	//"github.com/go-telegram/ui/keyboard/reply"
 )
 
 type Telegram struct {
