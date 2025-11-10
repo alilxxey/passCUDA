@@ -23,7 +23,7 @@ func todoRemove() {
 	cmd := exec.Command("/bin/bash", "-c", "kill $(gpioinfo | grep GPIO3 | awk -F 'gpiocdev-' '{print $2}' | tr -d '\"')")
 	_, err := cmd.Output()
 	if err != nil {
-		zap.S().Infof("failed to exec: %w", err)
+		zap.S().Infof("failed to exec: %v", err)
 	}
 }
 
@@ -49,48 +49,49 @@ func main() {
 
 	//relay, err := gpio.InitOutput("gpiochip0", 2, 1)
 	//if err != nil {
-	//	zap.S().Fatalf("failed to init relay: %w", err)
+	//	zap.S().Fatalf("failed to init relay: %v", err)
 	//}
 
 	//openBtn, err := gpio.InitTest("gpiochip0", 3)
 	//if err != nil {
-	//	zap.S().Fatalf("failed to init open btn: %w", err)
+	//	zap.S().Fatalf("failed to init open btn: %v", err)
 	//}
 
 	c, err := config.Load("/tmp/config.yml")
 	if err != nil {
-		zap.S().Fatalf("failed to load config: %w", err)
+		zap.S().Fatalf("failed to load config: %v", err)
 	}
 
 	openChan := make(chan models.DoorSignal, 10)
+	adminMessageChan := make(chan string, 10)
 
 	gpio, err := gpio.Init(c, ctx)
 	if err != nil {
-		zap.S().Fatalf("failed to init gpio: %w", err)
+		zap.S().Fatalf("failed to init gpio: %v", err)
 	}
 	defer gpio.Deinit()
 
-	door, err := door.Init(c, ctx, gpio, openChan)
+	door, err := door.Init(c, ctx, gpio, openChan, adminMessageChan)
 	if err != nil {
-		zap.S().Fatalf("failed to init door: %w", err)
+		zap.S().Fatalf("failed to init door: %v", err)
 	}
 
-	tg, err := telegram.Init(c, ctx, c.Telegram.Token, openChan, door)
+	tg, err := telegram.Init(c, ctx, c.Telegram.Token, openChan, adminMessageChan, door)
 	if err != nil {
-		zap.S().Fatalf("failed to init tg: %w", err)
+		zap.S().Fatalf("failed to init tg: %v", err)
 	}
 
 	card, err := card.Init(c, ctx, openChan)
 	if err != nil {
-		zap.S().Fatalf("failed to init card: %w", err)
+		zap.S().Fatalf("failed to init card: %v", err)
 	}
 
 	app, err := app.Init(c, ctx, tg, door, card)
 	if err != nil {
-		zap.S().Fatalf("failed to init app: %w", err)
+		zap.S().Fatalf("failed to init app: %v", err)
 	}
 	if err := app.Run(); err != nil {
-		zap.S().Fatalf("failed to start app: %w", err)
+		zap.S().Fatalf("failed to start app: %v", err)
 	}
 
 	<-ctx.Done()
@@ -106,9 +107,9 @@ func main() {
 	//}
 
 	//if err := relay.Deinit(); err != nil {
-	//	zap.S().Fatalf("failed to deinit relay: %w", err)
+	//	zap.S().Fatalf("failed to deinit relay: %v", err)
 	//}
 	//if err := openBtn.Deinit(); err != nil {
-	//	zap.S().Fatalf("failed to deinit relay: %w", err)
+	//	zap.S().Fatalf("failed to deinit relay: %v", err)
 	//}
 }

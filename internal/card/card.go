@@ -72,7 +72,7 @@ func (cm *CardManager) Start() error {
 		return err
 	}
 	if len(readers) != 1 {
-		return fmt.Errorf("one and only one reader need to be attached.. readers: `%w`", readers)
+		return fmt.Errorf("one and only one reader need to be attached.. readers: `%v`", readers)
 	}
 
 	for {
@@ -83,7 +83,7 @@ func (cm *CardManager) Start() error {
 		}
 		index, err := cm.waitUntilCardPresent(readers)
 		if err != nil {
-			zap.S().Errorf("error waiting card: `%w`", err)
+			zap.S().Errorf("error waiting card: `%v`", err)
 			continue
 		}
 		cm.processCard(readers[index])

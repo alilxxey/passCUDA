@@ -10,16 +10,30 @@ import (
 )
 
 type Door struct {
-	ctx            context.Context
-	config         *config.Config
-	gpio           *gpio.Gpio
-	openChan       chan models.DoorSignal
-	OpenInProgress bool
+	ctx              context.Context
+	config           *config.Config
+	gpio             *gpio.Gpio
+	openChan         chan models.DoorSignal
+	adminMessageChan chan string
+	OpenInProgress   bool
 }
 
-func Init(config *config.Config, ctx context.Context, gpio *gpio.Gpio, openChan chan models.DoorSignal) (*Door, error) {
+func Init(
+	config *config.Config,
+	ctx context.Context,
+	gpio *gpio.Gpio,
+	openChan chan models.DoorSignal,
+	adminMessageChan chan string,
+) (*Door, error) {
 	zap.S().Infof("init done")
-	return &Door{config: config, ctx: ctx, gpio: gpio, openChan: openChan, OpenInProgress: false}, nil
+	return &Door{
+		config:           config,
+		ctx:              ctx,
+		gpio:             gpio,
+		openChan:         openChan,
+		adminMessageChan: adminMessageChan,
+		OpenInProgress:   false,
+	}, nil
 }
 
 func (d *Door) Open() {

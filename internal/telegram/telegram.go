@@ -2,6 +2,8 @@ package telegram
 
 import (
 	"context"
+	"time"
+	"fmt"
 	"github.com/go-telegram/bot"
 	"go.uber.org/zap"
 	"paSKUDa/internal/config"
@@ -11,11 +13,12 @@ import (
 )
 
 type Telegram struct {
-	ctx      context.Context
-	bot      *bot.Bot
-	conf     *config.Config
-	openChan chan models.DoorSignal
-	door     *door.Door
+	ctx              context.Context
+	bot              *bot.Bot
+	conf             *config.Config
+	openChan         chan models.DoorSignal
+	adminMessageChan chan string
+	door             *door.Door
 }
 
 func Init(
@@ -23,6 +26,7 @@ func Init(
 	ctx context.Context,
 	token string,
 	openChan chan models.DoorSignal,
+	adminMessageChan chan string,
 	door *door.Door,
 ) (*Telegram, error) {
 	b, err := bot.New(token)
@@ -35,11 +39,12 @@ func Init(
 	}
 
 	tg := &Telegram{
-		conf:     c,
-		ctx:      ctx,
-		bot:      b,
-		openChan: openChan,
-		door:     door,
+		conf:             c,
+		ctx:              ctx,
+		bot:              b,
+		openChan:         openChan,
+		adminMessageChan: adminMessageChan,
+		door:             door,
 	}
 
 	tg.registerHandlers()
@@ -50,5 +55,33 @@ func Init(
 
 func (tg *Telegram) Start() error {
 	go tg.bot.Start(tg.ctx)
+	go func() {
+		for {
+			select {
+			case <-tg.ctx.Done():
+				return
+			case msg, ok := <-tg.adminMessageChan:
+				if !ok {
+					return
+				}
+				tg.NotifyAdmins(msg)
+			}
+		}
+	}()
 	return nil
+}
+
+func (tg *Telegram) NotifyAdmins(str string) error {
+	msg := fmt.Sprintf("[%s]: %s",
+		time.Now().UTC().Format("02-01-2006 15:04:05 UTC"),
+		str,
+	)
+	_, err := tg.bot.SendMessage(tg.ctx, &bot.SendMessageParams{
+		ChatID: tg.conf.Telegram.NotifyChatId,
+		Text:   msg,
+	})
+	if err != nil {
+		zap.S().Errorf("failed to send admin msg: `%s`, reason: `%v`", msg, err)
+	}
+	return err
 }

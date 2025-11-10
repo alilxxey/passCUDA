@@ -84,7 +84,7 @@ func (tg *Telegram) getVersionHandler() bot.HandlerFunc {
 	return func(ctx context.Context, b *bot.Bot, update *tgmodels.Update) {
 		ver, err := models.GetPrintableVersionInfo()
 		if err != nil {
-			zap.S().Errorf("can't get server version info: `%w`", err)
+			zap.S().Errorf("can't get server version info: `%v`", err)
 			return
 		}
 		b.SendMessage(ctx, &bot.SendMessageParams{
@@ -104,21 +104,19 @@ func (tg *Telegram) getOpenHandler() bot.HandlerFunc {
 			return
 		}
 
-		tg.openChan <- models.DoorSignalOpen
+		select {
+		case tg.openChan <- models.DoorSignalOpen:
+		default:
+		}
 
 		b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: update.Message.Chat.ID,
 			Text:   "done!",
 		})
 
-		tg.NotifyAdmins(fmt.Sprintf("door opened by user: `%w`", user))
+		select {
+		case tg.adminMessageChan <- fmt.Sprintf("door opened by user: `%v`", user):
+		default:
+		}
 	}
-}
-
-func (tg *Telegram) NotifyAdmins(str string) error {
-	_, err := tg.bot.SendMessage(tg.ctx, &bot.SendMessageParams{
-		ChatID: tg.conf.Telegram.NotifyChatId,
-		Text:   str,
-	})
-	return err
 }
