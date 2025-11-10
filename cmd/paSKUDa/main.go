@@ -65,7 +65,7 @@ func main() {
 	openChan := make(chan models.DoorSignal, 10)
 	adminMessageChan := make(chan string, 10)
 
-	gpio, err := gpio.Init(c, ctx)
+	gpio, err := gpio.Init(c, ctx, openChan, adminMessageChan)
 	if err != nil {
 		zap.S().Fatalf("failed to init gpio: %v", err)
 	}
