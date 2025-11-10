@@ -3,7 +3,7 @@
 telegram:
   enabled: true
   token: "BOT_TOKEN"
-  notify_chat_id: CHAT_ID"
+  notify_chat_id: "CHAT_ID"
 users: 
   - name: drunkbatya
     role: admin
