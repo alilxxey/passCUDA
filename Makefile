@@ -1,5 +1,5 @@
 GO = go
-APP_NAME = paSKUDa
+APP_NAME = passCUDA
 BUILD_DIR = build
 ENTRYPOINT = cmd/$(APP_NAME)/main.go
 TARGET = $(BUILD_DIR)/$(APP_NAME)
@@ -40,11 +40,6 @@ $(TARGET): $(ALL_SRC) Makefile
 .PHONY: run
 run: $(TARGET)
 	@./$(TARGET)
-
-.PHONY: rpi
-rpi: $(TARGET)
-	@scp build/paSKUDa pi@172.16.255.2:
-	@ssh pi@172.16.255.2 './paSKUDa'
 
 .PHONY: format
 format:

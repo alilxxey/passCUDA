@@ -19,14 +19,6 @@ import (
 	"go.uber.org/zap"
 )
 
-func todoRemove() {
-	cmd := exec.Command("/bin/bash", "-c", "kill $(gpioinfo | grep GPIO3 | awk -F 'gpiocdev-' '{print $2}' | tr -d '\"')")
-	_, err := cmd.Output()
-	if err != nil {
-		zap.S().Infof("failed to exec: %v", err)
-	}
-}
-
 func initLogging() *zap.Logger {
 	zapConfig := zap.NewDevelopmentConfig()
 	zapConfig.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
@@ -44,18 +36,6 @@ func main() {
 
 	logger := initLogging()
 	defer logger.Sync()
-
-	//todoRemove()
-
-	//relay, err := gpio.InitOutput("gpiochip0", 2, 1)
-	//if err != nil {
-	//	zap.S().Fatalf("failed to init relay: %v", err)
-	//}
-
-	//openBtn, err := gpio.InitTest("gpiochip0", 3)
-	//if err != nil {
-	//	zap.S().Fatalf("failed to init open btn: %v", err)
-	//}
 
 	c, err := config.Load("/etc/passCUDA/config.yml")
 	if err != nil {
