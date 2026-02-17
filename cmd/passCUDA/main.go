@@ -14,14 +14,12 @@ import (
 	"paSKUDa/internal/models"
 	"paSKUDa/internal/telegram"
 
-	"os/exec"
-
 	"go.uber.org/zap"
 )
 
 func initLogging() *zap.Logger {
 	zapConfig := zap.NewDevelopmentConfig()
-	zapConfig.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
+	zapConfig.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
 	logger, err := zapConfig.Build()
 	if err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
@@ -61,7 +59,7 @@ func main() {
 		zap.S().Fatalf("failed to init tg: %v", err)
 	}
 
-	card, err := card.Init(c, ctx, openChan)
+	card, err := card.Init(c, ctx, openChan, adminMessageChan, door)
 	if err != nil {
 		zap.S().Fatalf("failed to init card: %v", err)
 	}

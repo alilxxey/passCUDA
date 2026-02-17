@@ -32,9 +32,9 @@ func (app *App) Run() error {
 	if err := app.tg.Start(); err != nil {
 		return err
 	}
-	//if err := app.card.Start(); err != nil {
-	//	return err
-	//}
+	if err := app.card.Start(); err != nil {
+		return err
+	}
 	if err := app.door.Start(); err != nil {
 		return err
 	}
