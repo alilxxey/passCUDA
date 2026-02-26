@@ -13,6 +13,7 @@ import (
 	"paSKUDa/internal/gpio"
 	"paSKUDa/internal/models"
 	"paSKUDa/internal/telegram"
+	"paSKUDa/internal/webcam"
 
 	"go.uber.org/zap"
 )
@@ -54,7 +55,12 @@ func main() {
 		zap.S().Fatalf("failed to init door: %v", err)
 	}
 
-	tg, err := telegram.Init(c, ctx, c.Telegram.Token, openChan, adminMessageChan, door)
+	webcam, err := webcam.Init(c.Webcam.Device)
+	if err != nil {
+		zap.S().Fatalf("failed to init webcam: %v", err)
+	}
+
+	tg, err := telegram.Init(c, ctx, c.Telegram.Token, openChan, adminMessageChan, door, webcam)
 	if err != nil {
 		zap.S().Fatalf("failed to init tg: %v", err)
 	}
