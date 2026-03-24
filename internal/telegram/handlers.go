@@ -7,8 +7,11 @@ import (
 	tgmodels "github.com/go-telegram/bot/models"
 	"github.com/go-telegram/ui/keyboard/reply"
 	"go.uber.org/zap"
+	"os"
+	"bytes"
 	"paSKUDa/internal/config"
 	"paSKUDa/internal/models"
+	"path/filepath"
 )
 
 func (tg *Telegram) registerHandlers() {
@@ -17,6 +20,12 @@ func (tg *Telegram) registerHandlers() {
 		"/version",
 		bot.MatchTypeExact,
 		tg.authMiddleware(config.UserRoleAdmin, tg.getVersionHandler()),
+	)
+	tg.bot.RegisterHandler(
+		bot.HandlerTypeMessageText,
+		"/photo",
+		bot.MatchTypeExact,
+		tg.authMiddleware(config.UserRoleAdmin, tg.getPhotoHandler()),
 	)
 	tg.bot.RegisterHandler(
 		bot.HandlerTypeMessageText,
@@ -92,6 +101,46 @@ func (tg *Telegram) getVersionHandler() bot.HandlerFunc {
 			Text:      bot.EscapeMarkdown(ver),
 			ParseMode: tgmodels.ParseModeMarkdown,
 		})
+	}
+}
+
+func (tg *Telegram) getPhotoHandler() bot.HandlerFunc {
+	return func(ctx context.Context, b *bot.Bot, update *tgmodels.Update) {
+		if !tg.conf.Webcam.Enabled {
+			b.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID:    update.Message.Chat.ID,
+				Text:      "Camera not enabled!",
+				ParseMode: tgmodels.ParseModeMarkdown,
+			})
+			return
+		}
+		photoFile, err := tg.webcam.GetPhoto("1920x1080", 5)
+		if err != nil {
+			zap.S().Errorf("can't get photo: `%v`", err)
+			return
+		}
+		defer os.Remove(photoFile)
+
+		fileData, err := os.ReadFile(photoFile)
+		if err != nil {
+			zap.S().Errorf("can't read photo: `%v`", err)
+			return
+		}
+
+		params := &bot.SendPhotoParams{
+			ChatID:  update.Message.Chat.ID,
+			Photo:   &tgmodels.InputFileUpload{Filename: filepath.Base(photoFile), Data: bytes.NewReader(fileData)},
+			Caption: "Photo",
+		}
+
+		b.SendPhoto(ctx, params)
+
+		userID, _, _, _ := extractUserAndChat(update)
+		user, _ := tg.conf.FindUserById(userID)
+		select {
+		case tg.adminMessageChan <- fmt.Sprintf("photo is taken by user: `%v`", user):
+		default:
+		}
 	}
 }
 

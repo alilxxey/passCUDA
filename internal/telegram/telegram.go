@@ -8,6 +8,7 @@ import (
 	"paSKUDa/internal/config"
 	"paSKUDa/internal/door"
 	"paSKUDa/internal/models"
+	"paSKUDa/internal/webcam"
 	"time"
 )
 
@@ -18,6 +19,7 @@ type Telegram struct {
 	openChan         chan models.DoorSignal
 	adminMessageChan chan string
 	door             *door.Door
+	webcam           *webcam.Webcam
 	tempBanList      []int64
 }
 
@@ -28,6 +30,7 @@ func Init(
 	openChan chan models.DoorSignal,
 	adminMessageChan chan string,
 	door *door.Door,
+	webcam *webcam.Webcam,
 ) (*Telegram, error) {
 	b, err := bot.New(token)
 	if err != nil {
@@ -45,6 +48,7 @@ func Init(
 		openChan:         openChan,
 		adminMessageChan: adminMessageChan,
 		door:             door,
+		webcam:           webcam,
 		tempBanList:      []int64{},
 	}
 

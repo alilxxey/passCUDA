@@ -15,6 +15,10 @@ type Config struct {
 	Door     struct {
 		RelayOffHoldTimeS int `yaml:"relay_off_hold_time_s"`
 	} `yaml:"door"`
+	Webcam struct {
+		Enabled bool   `yaml:"enabled"`
+		Device  string `yaml:"device"`
+	} `yaml:"webcam"`
 }
 
 func Load(path string) (*Config, error) {

@@ -13,23 +13,14 @@ import (
 	"paSKUDa/internal/gpio"
 	"paSKUDa/internal/models"
 	"paSKUDa/internal/telegram"
-
-	"os/exec"
+	"paSKUDa/internal/webcam"
 
 	"go.uber.org/zap"
 )
 
-func todoRemove() {
-	cmd := exec.Command("/bin/bash", "-c", "kill $(gpioinfo | grep GPIO3 | awk -F 'gpiocdev-' '{print $2}' | tr -d '\"')")
-	_, err := cmd.Output()
-	if err != nil {
-		zap.S().Infof("failed to exec: %v", err)
-	}
-}
-
 func initLogging() *zap.Logger {
 	zapConfig := zap.NewDevelopmentConfig()
-	zapConfig.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
+	zapConfig.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
 	logger, err := zapConfig.Build()
 	if err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
@@ -44,18 +35,6 @@ func main() {
 
 	logger := initLogging()
 	defer logger.Sync()
-
-	//todoRemove()
-
-	//relay, err := gpio.InitOutput("gpiochip0", 2, 1)
-	//if err != nil {
-	//	zap.S().Fatalf("failed to init relay: %v", err)
-	//}
-
-	//openBtn, err := gpio.InitTest("gpiochip0", 3)
-	//if err != nil {
-	//	zap.S().Fatalf("failed to init open btn: %v", err)
-	//}
 
 	c, err := config.Load("/etc/passCUDA/config.yml")
 	if err != nil {
@@ -76,12 +55,17 @@ func main() {
 		zap.S().Fatalf("failed to init door: %v", err)
 	}
 
-	tg, err := telegram.Init(c, ctx, c.Telegram.Token, openChan, adminMessageChan, door)
+	webcam, err := webcam.Init(c.Webcam.Device)
+	if err != nil {
+		zap.S().Fatalf("failed to init webcam: %v", err)
+	}
+
+	tg, err := telegram.Init(c, ctx, c.Telegram.Token, openChan, adminMessageChan, door, webcam)
 	if err != nil {
 		zap.S().Fatalf("failed to init tg: %v", err)
 	}
 
-	card, err := card.Init(c, ctx, openChan)
+	card, err := card.Init(c, ctx, openChan, adminMessageChan, door)
 	if err != nil {
 		zap.S().Fatalf("failed to init card: %v", err)
 	}
